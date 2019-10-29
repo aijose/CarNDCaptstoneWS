@@ -78,6 +78,8 @@ class TLClassifier(object):
         # Each score represent how level of confidence for each of the objects.
         self.scores = self.detection_graph.get_tensor_by_name('detection_scores:0')
 
+        self.sess = tf.Session(graph=self.detection_graph)
+
         # The classification of the object (integer id).
         self.classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
         self.num_detections = self.detection_graph.get_tensor_by_name('num_detections:0')
@@ -97,9 +99,9 @@ class TLClassifier(object):
         image_np = np.expand_dims(image, 0)
         #image_np = np.expand_dims(np.asarray(image, dtype=np.uint8), 0)
 
-        with tf.Session(graph=self.detection_graph) as sess:                
+        with self.detection_graph.as_default():
             # Actual detection.
-            (boxes, scores, classes) = sess.run([self.boxes, 
+            (boxes, scores, classes) = self.sess.run([self.boxes, 
                                                  self.scores, 
                                                  self.classes], 
                                                  feed_dict={self.image_tensor: image_np})

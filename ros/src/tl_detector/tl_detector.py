@@ -13,7 +13,8 @@ import yaml
 from scipy.spatial import KDTree
 import numpy as np
 
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 2
+IMAGE_PROCESS_FREQ = 6
 
 class TLDetector(object):
     def __init__(self):
@@ -23,6 +24,9 @@ class TLDetector(object):
         self.waypoints = None
         self.waypoints_2d = None
         self.camera_image = None
+        self.first_time = True
+        self.has_image = False
+        self.image_count = -1
         self.lights = []
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
@@ -79,7 +83,11 @@ class TLDetector(object):
         """
         self.has_image = True
         self.camera_image = msg
-        light_wp, state = self.process_traffic_lights()
+        self.image_count += 1
+        if self.image_count % IMAGE_PROCESS_FREQ == 0 or self.first_time:
+            light_wp, state = self.process_traffic_lights()
+        else:
+            light_wp, state = self.last_wp, self.state
 
         '''
         Publish upcoming red lights at camera frequency.
@@ -90,13 +98,15 @@ class TLDetector(object):
         if self.state != state:
             self.state_count = 0
             self.state = state
-        elif self.state_count >= STATE_COUNT_THRESHOLD:
+        elif self.state_count >= STATE_COUNT_THRESHOLD or self.first_time:
             self.last_state = self.state
             light_wp = light_wp if state == TrafficLight.RED else -1
             self.last_wp = light_wp
             self.upcoming_red_light_pub.publish(Int32(light_wp))
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
+
+        self.first_time = False
         self.state_count += 1
 
     def get_closest_waypoint(self, x, y):
@@ -149,8 +159,10 @@ class TLDetector(object):
             cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
             #Get classification
-            return self.light_classifier.get_classification(cv_image)
-
+            state = self.light_classifier.get_classification(cv_image)
+            return state
+            #if state == TrafficLight.UNKNOWN:
+            #    return self.state
 
 
     def process_traffic_lights(self):
