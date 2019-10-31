@@ -9,8 +9,10 @@ from std_msgs.msg import Int32
 from geometry_msgs.msg import TwistStamped
 
 import math
-MAX_DECEL = 10
-LINE_OFFSET = 0
+
+MAX_DECEL = 0.5
+LINE_OFFSET = 2
+
 
 '''
 This node will publish waypoints from the car's current position to some `x` distance ahead.
@@ -28,7 +30,9 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
-
+CONSTANT_DECEL = 1 / LOOKAHEAD_WPS
+PUBLISHING_RATE = 20
+LOGGING_THROTTLE_FACTOR = PUBLISHING_RATE * 2
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -48,8 +52,10 @@ class WaypointUpdater(object):
         self.pose = None
         self.base_waypoints = None
         self.waypoints_2d = None
-        self.waypoint_tree = None
-        self.stopline_wp_idx = None
+        self.decelerate_count = 0
+	self.stopline_wp_idx = -1
+	self.waypoint_tree = None
+	
 
         self.loop()
 
@@ -107,31 +113,51 @@ class WaypointUpdater(object):
 
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        stop_distance = self.distance(waypoints, 0, self.stopline_wp_idx - LINE_OFFSET - closest_idx)
-        #rospy.logwarn("stopline_wp_idx-LINE_OFFSET-closest_idx={0},".format(self.stopline_wp_idx - LINE_OFFSET - closest_idx))
-        vel0 = self.current_vel
-        rospy.logwarn("vel0={0}, stop_distance={1}".format(vel0, stop_distance))
         for i, wp in enumerate(waypoints):
             p = Waypoint()
             p.pose = wp.pose
-
-            #stop_idx = min(max(self.stopline_wp_idx - closest_idx - 10, 0), len(waypoints)-1) # TWo waypoints backfrom line stops 
-            stop_idx = min(max(self.stopline_wp_idx - LINE_OFFSET - closest_idx, 0), len(waypoints)-1) # TWo waypoints backfrom line stops 
+            #distance includes a number of waypoints back so front of car stops at line
+            stop_idx = max(self.stopline_wp_idx - closest_idx - LINE_OFFSET, 0)
+	    p.pose = wp.pose
             dist = self.distance(waypoints, i, stop_idx)
-            if stop_distance > 0.0:
-                dist_ratio = dist / stop_distance
-                #vel = math.sqrt(2 * MAX_DECEL * dist)
-                vel = 1.5*vel0*(dist_ratio**2)*(1.0 - dist_ratio/3.0)
-            else:
-                vel = 0.0
-             
+            vel = math.sqrt(2 * MAX_DECEL * dist) + (i * CONSTANT_DECEL)
             if vel < 1.0:
                 vel = 0.0
-
-            p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x) # stick to speed limit
+            p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
             temp.append(p)
+        self.decelerate_count +=1
+        if (self.decelerate_count % LOGGING_THROTTLE_FACTOR) == 0:
+            size = len(waypoints) - 1
+            vel_start = temp[0].twist.twist.linear.x
+            vel_end = temp[size].twist.twist.linear.x
+            rospy.logwarn("DECEL : vel[0]={:.2f}, vel[{}]={:.2f}".format(vel_start, size, vel_end))
 
         return temp
+        #temp = []
+        #stop_distance = self.distance(waypoints, 0, self.stopline_wp_idx - LINE_OFFSET - closest_idx)
+        #vel0 = self.current_vel
+        #rospy.logwarn("vel0={0}, stop_distance={1}".format(vel0, stop_distance))
+        #for i, wp in enumerate(waypoints):
+        #    p = Waypoint()
+        #    p.pose = wp.pose
+
+            #stop_idx = min(max(self.stopline_wp_idx - closest_idx - 10, 0), len(waypoints)-1) # TWo waypoints backfrom line stops 
+        #    stop_idx = max(self.stopline_wp_idx - closest_idx - 10, 0)
+            #stop_idx = min(max(self.stopline_wp_idx - LINE_OFFSET - closest_idx, 0), len(waypoints)-1) # TWo waypoints backfrom line stops 
+        #    dist = self.distance(waypoints, i, stop_idx)
+        #    if stop_distance > 0.0:
+        #        dist_ratio = (stop_distance - dist) / stop_distance
+                #vel = math.sqrt(2 * MAX_DECEL * dist)
+        #        vel = 1.5*vel0*(dist_ratio**2)*(1.0 - dist_ratio/3.0)
+        #    else:
+        #        vel = 0.0
+             
+        #    if vel < 1.0:
+        #        vel = 0.0
+
+        #    p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x) # stick to speed limit
+        #    temp.append(p)
+        #return temp
 
     def pose_cb(self, msg):
         # TODO: Implement
