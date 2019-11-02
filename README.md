@@ -1,3 +1,27 @@
+
+### Team Galactic Canteloupe
+
+
+
+|     Name      | Image        | Location | LinkedIn/Email | Github                   |
+|---------------|--------------|----------|----------|--------------------------|
+| __Neilkunal Panchal__ | <img src="./imgs/nkp.png" alt="Neilkunal Panchal" width="150" height="150">| UK | [linkedin.com/in/neilkunal-panchal-bb0970b/](https://www.linkedin.com/in/neilkunal-panchal-bb0970b/) |[github.com/nkp1729](https://github.com/nkp1729)  |
+| __Arun Jose__ | <img src="./imgs/arun.jpg" alt="Arun Jose" width="150" height="150"> | United States | [arun_ij@yahoo.com](arun_ij@yahoo.com) |[github.com/aijose](https://github.com/aijose)  |
+| __Jialiang Li__ |  <img src="./imgs/jialiang.JPG" alt="Jialiang Li" width="150" height="150">  | China | [srljl@163.com](srljl@163.com)|[github.com/KevinLeeLiang](https://github.com/KevinLeeLiang)|
+| __Boming Luo__ | <img src="./imgs/Boming.jpg" alt="Luo Boming" width="150" height="150">| China | [luo.boming@fixstars.com](luo.boming@fixstars.com)|[github.com/KevinLeeLiang/](https://github.com/KevinLeeLiang)|
+
+
+### Architecture
+<img src="./imgs/rosgraph.png" alt="ROS GRAPH" width="435" height="300">
+
+The project runs with [ROS](http://www.ros.org/) and is divided into the following modules :
+ - `tl_detector` uses the camera to detect the traffic lights' color
+ - `twist_controller` handles the control of the car
+ - `waypoint_follower` makes sure the car follow the trajectory
+ - `waypoint_loader` loads the route the car is going to follow
+ - `waypoint_updater` adapts the car's route to the situation (eg. traffic light)
+
+
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
 
 Please use **one** of the two installation options, either native **or** docker installation.

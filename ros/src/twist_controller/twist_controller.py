@@ -48,7 +48,7 @@ class Controller(object):
         # rospy.logwarn("Filtered velocity: {0}".format(self.vel_lpf.get()))
 
         steering = self.yaw_controller.get_steering(linear_vel, angular_vel, current_vel)
-
+	print("got steering")
         vel_error = linear_vel - current_vel
         self.last_vel = current_vel
 

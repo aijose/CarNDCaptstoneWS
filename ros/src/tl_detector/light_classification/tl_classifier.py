@@ -10,7 +10,7 @@ def filter_boxes(min_score, boxes, scores, classes):
     for i in range(n):
         if scores[i] >= min_score:
             idxs.append(i)
-    
+
     filtered_boxes = boxes[idxs, ...]
     filtered_scores = scores[idxs, ...]
     filtered_classes = classes[idxs, ...]
@@ -19,7 +19,7 @@ def filter_boxes(min_score, boxes, scores, classes):
 def to_image_coords(boxes, height, width):
     """
     The original box coordinate output is normalized, i.e [0, 1].
-    
+
     This converts it back to the original coordinate based on the image
     size.
     """
@@ -28,7 +28,7 @@ def to_image_coords(boxes, height, width):
     box_coords[:, 1] = boxes[:, 1] * width
     box_coords[:, 2] = boxes[:, 2] * height
     box_coords[:, 3] = boxes[:, 3] * width
-    
+
     return box_coords
 
 def draw_boxes(image, boxes, classes, thickness=4):
@@ -39,7 +39,7 @@ def draw_boxes(image, boxes, classes, thickness=4):
         class_id = int(classes[i])
         color = COLOR_LIST[class_id]
         draw.line([(left, top), (left, bot), (right, bot), (right, top), (left, top)], width=thickness, fill=color)
-        
+
 def load_graph(graph_file):
     """Loads a frozen inference graph"""
     graph = tf.Graph()
@@ -101,16 +101,16 @@ class TLClassifier(object):
 
         with self.detection_graph.as_default():
             # Actual detection.
-            (boxes, scores, classes) = self.sess.run([self.boxes, 
-                                                 self.scores, 
-                                                 self.classes], 
+            (boxes, scores, classes) = self.sess.run([self.boxes,
+                                                 self.scores,
+                                                 self.classes],
                                                  feed_dict={self.image_tensor: image_np})
-        
+
             # Remove unnecessary dimensions
             boxes = np.squeeze(boxes)
             scores = np.squeeze(scores)
             classes = np.squeeze(classes)
-        
+
             # May be turned on for debug purposes
             if False:
                 # The current box coordinates are normalized to a range between 0 and 1.
@@ -121,14 +121,14 @@ class TLClassifier(object):
 
                 width, height = image.size
                 box_coords = to_image_coords(boxes, height, width)
-        
+
                 # Each class with be represented by a differently colored box
                 draw_boxes(image, box_coords, classes)
         #if True:
         #    classes = [1]
         #    scores = [1]
 
-            print("Classification: {0} with Score = {1}".format(label_map[classes[0]], scores[0]))
+            #print("Classification: {0} with Score = {1}".format(label_map[classes[0]], scores[0]))
 
             #self.confidence_cutoff = 0.0
             if scores[0] > self.confidence_cutoff:
