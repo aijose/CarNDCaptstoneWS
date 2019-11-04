@@ -14,7 +14,7 @@ from scipy.spatial import KDTree
 import numpy as np
 
 STATE_COUNT_THRESHOLD = 3
-IMAGE_PROCESS_FREQ = 6
+IMAGE_PROCESS_FREQ = 10
 
 class TLDetector(object):
     def __init__(self):
